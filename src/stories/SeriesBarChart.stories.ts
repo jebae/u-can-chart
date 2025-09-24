@@ -23,7 +23,7 @@ export const Simple: Story = {
 		drawInterval: '1s',
 		axisColor: '#939FB2',
 		gridColor: '#303947',
-		barColor: '#32A576',
+		barColor: '#5e60ce',
 		addDataFrequency: 500,
 	},
 };
@@ -38,7 +38,7 @@ export const HighFrequency: Story = {
 		drawInterval: '1s',
 		axisColor: '#939FB2',
 		gridColor: '#303947',
-		barColor: '#32A576',
+		barColor: '#5e60ce',
 		addDataFrequency: 100,
 	},
 };
@@ -53,7 +53,7 @@ export const LowFrequency: Story = {
 		drawInterval: '1s',
 		axisColor: '#939FB2',
 		gridColor: '#303947',
-		barColor: '#32A576',
+		barColor: '#5e60ce',
 		addDataFrequency: SECOND,
 	},
 };
