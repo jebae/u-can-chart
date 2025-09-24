@@ -19,8 +19,8 @@ export default class BarChart extends Chart {
 	private data: (BarData & { sum: number })[] = [];
 	private axisColor: string = '#FFFFFF';
 	private gridColor: string = '#FFFFFF';
-	private startX: number = 0;
-	private startY: number = 0;
+	private originX: number = 0;
+	private originY: number = 0;
 	private intervalX: number = 0;
 	private intervalY: number = 0;
 	private barWidth: number = 0;
@@ -71,10 +71,10 @@ export default class BarChart extends Chart {
 		let focusedIdx = -1;
 
 		if (
-			x >= this.startX && x <= this.width - CHART_MARGIN
-			&& y >= CHART_MARGIN && y <= this.startY
+			x >= this.originX && x <= this.width - CHART_MARGIN
+			&& y >= CHART_MARGIN && y <= this.originY
 		) {
-			focusedIdx = Math.trunc((x - this.startX) / this.intervalX);
+			focusedIdx = Math.trunc((x - this.originX) / this.intervalX);
 		}
 
 		if (this.focusedIdx === focusedIdx) {
@@ -90,7 +90,7 @@ export default class BarChart extends Chart {
 		const buffer = 20;
 		const maxValueWidth = Math.max(...this.data.map(({ sum }) => this.ctx.measureText(sum.toString()).width));
 
-		this.startX = maxValueWidth + buffer + CHART_MARGIN;
+		this.originX = maxValueWidth + buffer + CHART_MARGIN;
 	}
 
 	private setXAxisInfo() {
@@ -99,17 +99,17 @@ export default class BarChart extends Chart {
 
 		const maxLabelWidth = Math.max(...this.data.map(({ label }) => this.ctx.measureText(label).width));
 		const fontHeight = 14;
-		this.intervalX = (this.width - this.startX - CHART_MARGIN) / this.data.length;
+		this.intervalX = (this.width - this.originX - CHART_MARGIN) / this.data.length;
 		this.barWidth = this.intervalX / 2;
 		this.labelTiltAngle = maxLabelWidth > this.intervalX ? Math.acos(this.intervalX / maxLabelWidth) : 0;
 
 		// calculate adjusted origin y position
-		this.startY = this.height - maxLabelWidth * Math.sin(this.labelTiltAngle) - CHART_MARGIN - fontHeight;
+		this.originY = this.height - maxLabelWidth * Math.sin(this.labelTiltAngle) - CHART_MARGIN - fontHeight;
 	}
 
 	private setYAxisInfo() {
 		// calculate min, max value in nice tick
-		this.axisHeight = this.startY - CHART_MARGIN;
+		this.axisHeight = this.originY - CHART_MARGIN;
 		const minValue = 0; // fixed with 0
 		const maxValue = Math.max(...this.data.map(({ sum }) => sum));
 		const delta = maxValue - minValue;
@@ -128,25 +128,25 @@ export default class BarChart extends Chart {
 
 		// draw main line
 		this.drawLine({
-			from: [this.startX, this.startY],
-			to: [end, this.startY],
+			from: [this.originX, this.originY],
+			to: [end, this.originY],
 			width: 0.5,
 			color: this.axisColor,
 		});
 
 		// draw ticks and grid
 		for (let i = 0; i < this.data.length + 1; i++) {
-			const x = this.startX + i * this.intervalX;
+			const x = this.originX + i * this.intervalX;
 
 			this.drawLine({
-				from: [x, this.startY],
-				to: [x, this.startY + 5],
+				from: [x, this.originY],
+				to: [x, this.originY + 5],
 				width: 0.5,
 				color: this.axisColor,
 			});
 
 			this.drawLine({
-				from: [x, this.startY],
+				from: [x, this.originY],
 				to: [x, CHART_MARGIN],
 				width: 0.5,
 				color: this.gridColor,
@@ -157,11 +157,11 @@ export default class BarChart extends Chart {
 		for (let i = 0; i < this.data.length; i++) {
 			const { width } = this.ctx.measureText(this.data[i].label);
 			const textWidth = width * Math.cos(this.labelTiltAngle);
-			const x = this.startX + i * this.intervalX + this.intervalX / 2  - textWidth / 2;
+			const x = this.originX + i * this.intervalX + this.intervalX / 2  - textWidth / 2;
 
 			this.drawText({
 				x,
-				y: this.startY + 20,
+				y: this.originY + 20,
 				tiltAngle: this.labelTiltAngle,
 				text: this.data[i].label,
 				color: this.axisColor,
@@ -177,23 +177,23 @@ export default class BarChart extends Chart {
 
 		// draw main line
 		this.drawLine({
-			from: [this.startX, this.startY],
-			to: [this.startX, end],
+			from: [this.originX, this.originY],
+			to: [this.originX, end],
 			width: 0.5,
 			color: this.axisColor,
 		});
 
 		// draw ticks and grid
-		for (let y = this.startY - this.intervalY; Math.round(y) >= end; y -= this.intervalY) {
+		for (let y = this.originY - this.intervalY; Math.round(y) >= end; y -= this.intervalY) {
 			this.drawLine({
-				from: [this.startX, y],
-				to: [this.startX - 5, y],
+				from: [this.originX, y],
+				to: [this.originX - 5, y],
 				width: 0.5,
 				color: this.axisColor,
 			});
 
 			this.drawLine({
-				from: [this.startX, y],
+				from: [this.originX, y],
 				to: [this.width - CHART_MARGIN, y],
 				width: 0.5,
 				color: this.gridColor,
@@ -203,9 +203,9 @@ export default class BarChart extends Chart {
 		// draw labels
 		let label = this.minValue;
 
-		for (let y = this.startY; Math.round(y) >= end; y -= this.intervalY) {
+		for (let y = this.originY; Math.round(y) >= end; y -= this.intervalY) {
 			this.drawText({
-				x: this.startX - 15,
+				x: this.originX - 15,
 				y,
 				tiltAngle: 0,
 				text: label.toString(),
@@ -228,8 +228,8 @@ export default class BarChart extends Chart {
 		const { sum } = this.data[index];
 		const values = this.data[index].values.filter(({ value }) => value !== 0);
 		const height = this.getBarHeight(index) * ratio;
-		const x = this.startX + index * this.intervalX + this.intervalX / 2 - this.barWidth / 2;
-		let segmentStart = this.startY;
+		const x = this.originX + index * this.intervalX + this.intervalX / 2 - this.barWidth / 2;
+		let segmentStart = this.originY;
 
 		for (let i = 0; i < values.length; i++) {
 			const { value, color } = values[i];
@@ -321,8 +321,8 @@ export default class BarChart extends Chart {
 		this.tooltip.style.display = '';
 
 		const barHeight = this.getBarHeight(this.focusedIdx);
-		const y = Math.min(this.startY - barHeight, this.startY - this.tooltip.offsetHeight);
-		let x = this.startX + this.focusedIdx * this.intervalX + this.intervalX / 2 + this.barWidth / 2;
+		const y = Math.min(this.originY - barHeight, this.originY - this.tooltip.offsetHeight);
+		let x = this.originX + this.focusedIdx * this.intervalX + this.intervalX / 2 + this.barWidth / 2;
 
 		if (x + this.tooltip.offsetWidth > this.width - CHART_MARGIN) {
 			x -= this.barWidth + this.tooltip.offsetWidth;

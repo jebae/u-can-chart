@@ -31,9 +31,9 @@ export default class LineChart extends Chart {
 	private gridColor: string = '#FFFFFF';
 	private lineWidth: number = 1;
 	private colors: Record<string, string> = {};
-	private startX: number = 0;
+	private originX: number = 0;
 	private endX: number = 0;
-	private startY: number = 0;
+	private originY: number = 0;
 	private intervalX: number = 0;
 	private intervalY: number = 0;
 	private axisHeight: number = 0;
@@ -99,10 +99,10 @@ export default class LineChart extends Chart {
 		let focusedIdx = -1;
 
 		if (
-			x >= this.startX && x <= this.endX
-			&& y >= CHART_MARGIN && y <= this.startY
+			x >= this.originX && x <= this.endX
+			&& y >= CHART_MARGIN && y <= this.originY
 		) {
-			focusedIdx = Math.round((x - this.startX) / this.intervalX);
+			focusedIdx = Math.round((x - this.originX) / this.intervalX);
 		}
 
 		if (this.focusedIdx === focusedIdx) {
@@ -124,7 +124,7 @@ export default class LineChart extends Chart {
 			})
 		);
 
-		this.startX = maxValueWidth + buffer + CHART_MARGIN;
+		this.originX = maxValueWidth + buffer + CHART_MARGIN;
 	}
 
 	private setXAxisInfo() {
@@ -136,16 +136,16 @@ export default class LineChart extends Chart {
 		const lastLabelWidth = this.ctx.measureText(this.data[this.data.length - 1].label).width;
 
 		this.endX = this.width - CHART_MARGIN - lastLabelWidth / 2;
-		this.intervalX = (this.endX - this.startX) / (this.data.length - 1);
+		this.intervalX = (this.endX - this.originX) / (this.data.length - 1);
 		this.labelTiltAngle = maxLabelWidth > this.intervalX ? Math.acos(this.intervalX / maxLabelWidth) : 0;
 
 		// calculate adjusted origin y position
-		this.startY = this.height - maxLabelWidth * Math.sin(this.labelTiltAngle) - CHART_MARGIN - fontHeight;
+		this.originY = this.height - maxLabelWidth * Math.sin(this.labelTiltAngle) - CHART_MARGIN - fontHeight;
 	}
 
 	private setYAxisInfo() {
 		// calculate min, max value in nice tick
-		this.axisHeight = this.startY - CHART_MARGIN;
+		this.axisHeight = this.originY - CHART_MARGIN;
 		const minValue = Math.min(
 			...this.data.map(({ values }) => {
 				const minValue = Math.min(...values.map(({ value }) => value));
@@ -175,25 +175,25 @@ export default class LineChart extends Chart {
 	private drawXAxis() {
 		// draw main line
 		this.drawLine({
-			from: [this.startX, this.startY],
-			to: [this.endX, this.startY],
+			from: [this.originX, this.originY],
+			to: [this.endX, this.originY],
 			width: 0.5,
 			color: this.axisColor,
 		});
 
 		// draw ticks and grid
 		for (let i = 0; i < this.data.length; i++) {
-			const x = this.startX + i * this.intervalX;
+			const x = this.originX + i * this.intervalX;
 
 			this.drawLine({
-				from: [x, this.startY],
-				to: [x, this.startY + 5],
+				from: [x, this.originY],
+				to: [x, this.originY + 5],
 				width: 0.5,
 				color: this.axisColor,
 			});
 
 			this.drawLine({
-				from: [x, this.startY],
+				from: [x, this.originY],
 				to: [x, CHART_MARGIN],
 				width: 0.5,
 				color: this.gridColor,
@@ -204,11 +204,11 @@ export default class LineChart extends Chart {
 		for (let i = 0; i < this.data.length; i++) {
 			const { width } = this.ctx.measureText(this.data[i].label);
 			const textWidth = width * Math.cos(this.labelTiltAngle);
-			const x = this.startX + i * this.intervalX - textWidth / 2;
+			const x = this.originX + i * this.intervalX - textWidth / 2;
 
 			this.drawText({
 				x,
-				y: this.startY + 20,
+				y: this.originY + 20,
 				tiltAngle: this.labelTiltAngle,
 				text: this.data[i].label,
 				color: this.axisColor,
@@ -224,23 +224,23 @@ export default class LineChart extends Chart {
 
 		// draw main line
 		this.drawLine({
-			from: [this.startX, this.startY],
-			to: [this.startX, end],
+			from: [this.originX, this.originY],
+			to: [this.originX, end],
 			width: 0.5,
 			color: this.axisColor,
 		});
 
 		// draw ticks and grid
-		for (let y = this.startY - this.intervalY; Math.round(y) >= end; y -= this.intervalY) {
+		for (let y = this.originY - this.intervalY; Math.round(y) >= end; y -= this.intervalY) {
 			this.drawLine({
-				from: [this.startX, y],
-				to: [this.startX - 5, y],
+				from: [this.originX, y],
+				to: [this.originX - 5, y],
 				width: 0.5,
 				color: this.axisColor,
 			});
 
 			this.drawLine({
-				from: [this.startX, y],
+				from: [this.originX, y],
 				to: [this.endX, y],
 				width: 0.5,
 				color: this.gridColor,
@@ -250,9 +250,9 @@ export default class LineChart extends Chart {
 		// draw labels
 		let label = this.minValue;
 
-		for (let y = this.startY; Math.round(y) >= end; y -= this.intervalY) {
+		for (let y = this.originY; Math.round(y) >= end; y -= this.intervalY) {
 			this.drawText({
-				x: this.startX - 15,
+				x: this.originX - 15,
 				y,
 				tiltAngle: 0,
 				text: label.toString(),
@@ -288,7 +288,7 @@ export default class LineChart extends Chart {
 				break;
 			}
 
-			x = this.startX + i * this.intervalX;
+			x = this.originX + i * this.intervalX;
 			y = this.getY(values[i] as number);
 			this.drawCircle({ x, y, radius: DOT_RADIUS, color });
 
@@ -317,7 +317,7 @@ export default class LineChart extends Chart {
 			const y2 = this.getY(values[i] as number);
 			const slope = (y2 - y1) / this.intervalX;
 			const yIntercept = y2 - slope * (x + this.intervalX);
-			const toX = this.startX + endIndex * this.intervalX;
+			const toX = this.originX + endIndex * this.intervalX;
 			const toY = slope * toX + yIntercept;
 
 			this.drawCircle({ x, y, radius: 4, color });
@@ -377,7 +377,7 @@ export default class LineChart extends Chart {
 			return;
 		}
 
-		const focusedX = this.startX + this.focusedIdx * this.intervalX;
+		const focusedX = this.originX + this.focusedIdx * this.intervalX;
 
 		// draw focused dot
 		for (const { name, value } of this.data[this.focusedIdx].values) {
@@ -395,7 +395,7 @@ export default class LineChart extends Chart {
 
 		// draw guide line
 		this.drawLine({
-			from: [focusedX, this.startY],
+			from: [focusedX, this.originY],
 			to: [focusedX, CHART_MARGIN],
 			width: 0.5,
 			color: this.axisColor,
@@ -428,11 +428,11 @@ export default class LineChart extends Chart {
 		const y = Math.max(
 			Math.min(
 				this.getY(average) - this.tooltip.offsetHeight / 2,
-				this.startY - this.tooltip.offsetHeight
+				this.originY - this.tooltip.offsetHeight
 			),
 			CHART_MARGIN
 		);
-		let x = this.startX + this.focusedIdx * this.intervalX + FOCUSED_DOT_RADIUS;
+		let x = this.originX + this.focusedIdx * this.intervalX + FOCUSED_DOT_RADIUS;
 
 		if (x + this.tooltip.offsetWidth > this.width - CHART_MARGIN) {
 			x -= this.tooltip.offsetWidth + FOCUSED_DOT_RADIUS;
@@ -442,7 +442,7 @@ export default class LineChart extends Chart {
 	};
 
 	private getY(value: number) {
-		return this.startY - (value - this.minValue) * this.axisHeight / (this.maxValue - this.minValue);
+		return this.originY - (value - this.minValue) * this.axisHeight / (this.maxValue - this.minValue);
 	}
 
 	private clearChart() {
